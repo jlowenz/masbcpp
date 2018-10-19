@@ -28,6 +28,7 @@ SOFTWARE.
 #include <Eigen/Core>
 #include <pcl/point_types.h>
 #include <pcl/features/normal_3d_omp.h>
+#include <pcl/io/pcd_io.h>
 
 typedef float Scalar;
 typedef Eigen::Matrix<Scalar, 1, 3> Vector3; // Type for 3D float points
@@ -44,4 +45,8 @@ typedef pcl::Normal Normal;
 typedef pcl::PointCloud<Point> PointCloud;
 typedef pcl::PointCloud<Normal> NormalCloud;
 
+typedef pcl::PointNormal PointNormal;
+typedef pcl::PointCloud<PointNormal> PointNormalCloud;
+
 #endif
+

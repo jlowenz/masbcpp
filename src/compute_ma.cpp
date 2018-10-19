@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
    try {
       TCLAP::CmdLine cmd("Computes a MAT point approximation, see also https://github.com/tudelft3d/masbcpp", ' ', "0.1");
 
-      TCLAP::UnlabeledValueArg<std::string> inputArg("input", "path to directory with inside it a 'coords.npy' and a 'normals.npy' file. Both should be Nx3 float arrays where N is the number of input points.", true, "", "input dir", cmd);
+      TCLAP::UnlabeledValueArg<std::string> inputArg("input", "path to directory with inside it a 'coords.npy' and a 'normals.npy' file. Both should be Nx3 float arrays where N is the number of input points. Alternatively, specify a path to a PCD file containing at least xyz and normal values.", true, "", "input dir", cmd);
       TCLAP::UnlabeledValueArg<std::string> outputArg("output", "path to output directory", false, "", "output dir", cmd);
 
       TCLAP::ValueArg<double> denoise_preserveArg("d", "preserve", "denoise preserve threshold", false, 20, "double", cmd);
@@ -63,7 +63,13 @@ int main(int argc, char **argv) {
       io_params.normals = true;
 
       ma_data madata = {};
-      npy2madata(inputArg.getValue(), madata, io_params);
+      std::string input = inputArg.getValue();
+      auto pcd_suffix = input.find_last_of(".pcd");
+      if (pcd_suffix != std::string::npos) {
+        pcd2madata(input, madata, io_params);
+      } else {
+        npy2madata(input, madata, io_params);
+      }
 
       // Perform the actual processing
       madata.ma_coords.reset(new PointCloud);
@@ -76,6 +82,7 @@ int main(int argc, char **argv) {
       io_params.ma_coords = true;
       io_params.ma_qidx = true;
       madata2npy(output_path, madata, io_params);
+      madata2pcd(output_path, madata, io_params);
 
       {
          std::string output_path_metadata = output_path + "/compute_ma";

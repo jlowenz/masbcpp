@@ -41,6 +41,9 @@ struct io_parameters {
 void npy2madata(std::string input_dir_path, ma_data &madata, io_parameters &p);
 void madata2npy(std::string npy_path, ma_data &madata, io_parameters &p);
 
+void pcd2madata(const std::string& input_file_path, ma_data& madata, io_parameters& params);
+void madata2pcd(const std::string& output_dir, ma_data& madata, io_parameters& params);
+
 // Just a convenience function, to call when necessary.
 void convertNPYtoXYZ(std::string input_dir_path);
 

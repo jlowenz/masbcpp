@@ -31,6 +31,69 @@ SOFTWARE.
 #include "madata.h"
 #include "types.h"
 
+void pcd2madata(const std::string& input_file_path, ma_data& madata, io_parameters& params)
+{
+  pcl::PCDReader io;
+  PointNormalCloud cloud;
+  if (io.read(input_file_path, cloud) < 0) {
+    std::cerr << "Error reading PCD file: " << input_file_path << std::endl;
+    exit(1);
+  }
+  if (params.coords) {
+    std::cout << "Reading coords..." << std::endl;
+    madata.coords.reset(new PointCloud);
+    madata.coords->reserve(cloud.size());
+    for (size_t i = 0; i < cloud.size(); ++i) {      
+      madata.coords->push_back(Point(cloud.points[i].x,
+                                     cloud.points[i].y,
+                                     cloud.points[i].z));
+    }
+  }
+  if (params.normals)
+  {
+    std::cout << "Reading normals..." << std::endl;
+    madata.normals.reset(new NormalCloud);
+    madata.normals->reserve(cloud.size());
+    for (size_t i = 0; i < cloud.size(); ++i) {
+      madata.normals->push_back(Normal(cloud.points[i].normal_x,
+                                       cloud.points[i].normal_y,
+                                       cloud.points[i].normal_z));
+    }
+  }
+  if (params.ma_coords || params.ma_qidx || params.lfs) {
+    std::cerr << "Cannot read `coords`, `qidx` or `lfs` from PCD file." << std::endl;
+  }
+}
+
+void madata2pcd(const std::string& output_dir, ma_data& madata, io_parameters& params)
+{
+  if (params.ma_coords) {
+    std::cout << "Writing ma coords arrays..." << std::endl;
+
+    const unsigned int shape[] = { static_cast<unsigned int>(madata.coords->size()), 3 };
+
+    pcl::PCDWriter out;
+    
+    PointCloud cloud;
+    cloud.reserve(shape[0]);
+    for (size_t i = 0; i < shape[0]; ++i) {
+      cloud.push_back(Point(madata.ma_coords->at(i).x,
+                            madata.ma_coords->at(i).y,
+                            madata.ma_coords->at(i).z));
+    }
+    out.writeBinary(output_dir + "/ma_coords_in.pcd", cloud);
+    cloud.clear();
+    
+    for (size_t i = 0; i < shape[0]; ++i) {
+      cloud.push_back(Point(madata.ma_coords->at(i + shape[0]).x,
+                            madata.ma_coords->at(i + shape[0]).y,
+                            madata.ma_coords->at(i + shape[0]).z));
+    }
+    out.writeBinary(output_dir + "/ma_coords_out.pcd", cloud);
+  }
+}
+
+
 inline cnpy::NpyArray read_npyarray(std::string input_file_path) {
    // windows fix
    std::replace(input_file_path.begin(), input_file_path.end(), '\\', '/');
